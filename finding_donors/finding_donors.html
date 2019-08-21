@@ -14038,8 +14038,8 @@ $$ F_{\beta} = (1 + \beta^2) \cdot \frac{precision \cdot recall}{\left( \beta^2 
 
 <span class="n">FN</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">TN</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">TP</span> <span class="o">=</span> <span class="n">n_greater_50k</span>
-<span class="n">FP</span> <span class="o">=</span> <span class="n">n_at_most_50k</span>
+<span class="n">TP</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y_val</span><span class="p">[:]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">FP</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y_val</span><span class="p">[:]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">frac</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="n">denominator</span><span class="p">):</span>
