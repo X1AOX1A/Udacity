@@ -102,7 +102,7 @@ class Robot(object):
         if self.learning:
             # TODO 8. When learning, update the q table according
             # to the given rules - OK
-            self.Qtable[state][action] += (self.alpha * (r + (self.gamma * float(max(self.Qtable[next_state].values())) ) - self.Qtable[state][action] )) 
+            self.Qtable[self.state][action] += (self.alpha * (r + (self.gamma * float(max(self.Qtable[next_state].values())) ) - self.Qtable[self.state][action] )) 
 
     def update(self):
         """
