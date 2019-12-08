@@ -9,7 +9,7 @@ def read_data(path='data'):
     print('Loading test data...')
     test = pd.read_csv(path+'/test.csv', index_col = 0)
     
-    print('Loading test data...')
+    print('Loading store data...')
     store = pd.read_csv(path+'/store.csv', index_col = 0)
     print('  Successfully read data as: train, test, store.\n')
     return train, test, store
@@ -72,9 +72,9 @@ def drop_columns(data):
     # 删除 ['PromoInterval_Nan', 'StoreType_d', 'Assortment_c', 'StateHoliday_0'] 防止共线性
     data.drop(['PromoInterval_Nan', 'StoreType_d', 'Assortment_c', 'StateHoliday_0'], axis=1, inplace=True)
     return data
-    
+
+from sklearn.preprocessing import StandardScaler
 def scale_data(data):
-    from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
     col = ['Store','Month','Day','Year','DayOfWeek','CompetitionDistance',
              'CompetitionOpenTime','Promo2SinceWeek','Promo2SinceYear']
