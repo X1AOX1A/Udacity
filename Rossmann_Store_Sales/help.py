@@ -129,7 +129,7 @@ def rmspe(yhat, y):
 
 
 #----------------visual the train result-----------------#
-def visual_result(model,list_X_y, same_axis=True):
+def visual_result(model,list_X_y, same_axis=False):
     X = list_X_y[0]
     y = list_X_y[1]
     df = pd.DataFrame(model.cv_results_)
@@ -183,10 +183,10 @@ import datetime
 def save_model(Model, FileName, Best_Model=True):
     print('Saving model...')
     starttime = datetime.datetime.now()
-    FileName = 'Model_Parameter/'+FileName+'.pkl'
-    joblib.dump(Model, FileName) 
+    FileName2 = 'Model_Parameter/'+FileName+'.pkl'
+    joblib.dump(Model, FileName2) 
     endtime = datetime.datetime.now()
-    print('  The Model have been save in ','[\''+FileName+'\']')
+    print('  The Model have been save in ','[\''+FileName2+'\']')
     print('    PS: To load model, use command: \'Model = joblib.load(FileName)\'.')
     print('  Using time:', (endtime - starttime).seconds, 'sec\n')
     if Best_Model:
