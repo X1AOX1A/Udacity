@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #----------------read data-----------------#
 def read_data(path='data'):
     print('Loading train data...')
-    train = pd.read_csv(path+'/train.csv', index_col = 0)
+    train = pd.read_csv(path+'/train.csv', index_col = 0, low_memory=False)
 
     print('Loading test data...')
     test = pd.read_csv(path+'/test.csv', index_col = 0)
@@ -73,6 +75,8 @@ def drop_columns(data):
     data.drop(['PromoInterval_Nan', 'StoreType_d', 'Assortment_c', 'StateHoliday_0'], axis=1, inplace=True)
     return data
 
+def
+
 from sklearn.preprocessing import StandardScaler
 def scale_data(data):
     scaler = StandardScaler()
@@ -96,8 +100,9 @@ def test_preprocess(test_data, extend_data):
     test_data = extend(test_data.drop('Id', axis=1), store_pre, Bow_Matrix.columns)
     test_data = one_hot(test_data)
     test_data[['StateHoliday_b', 'StateHoliday_c']] = pd.DataFrame(np.zeros((len(test_data),2)), 
-                                                               columns=['StateHoliday_b', 'StateHoliday_c'], 
-                                                               dtype='uint8')
+                                                                   columns=
+                                                                   ['StateHoliday_b','StateHoliday_c'], 
+                                                                   dtype='uint8')
     test_data = drop_columns(test_data)
     test_data = scale_data(test_data)
     print('  Successfully preprocess testing data.\n')
@@ -123,3 +128,55 @@ def rmspe(yhat, y):
     w = ToWeight(y)
     rmspe = np.sqrt(np.mean( w * (y - yhat)**2 ))
     return rmspe
+
+
+#----------------visual the train result-----------------#
+def visual_result(model,list_X_y, same_axis=True):
+    X = list_X_y[0]
+    y = list_X_y[1]
+    df = pd.DataFrame(model.cv_results_)
+    df.loc[:,['mean_train_score','mean_test_score']] = -df[['mean_train_score','mean_test_score']]
+
+    # visualize the score
+    fig, axes = plt.subplots(1,2, figsize=(12,4))
+    if same_axis:
+        vmin=df[['mean_test_score','mean_train_score']].min().min()
+        vmax=df[['mean_test_score','mean_train_score']].max().max()
+        sns.heatmap(df.groupby([X,y])['mean_train_score'].mean().unstack(), 
+                    ax=axes[0], vmin=vmin, vmax=vmax, annot=True, fmt='.3f')
+
+        sns.heatmap(df.groupby([X,y])['mean_test_score'].mean().unstack(), 
+                    ax=axes[1], vmin=vmin, vmax=vmax, annot=True, fmt='.3f')
+    else:
+        sns.heatmap(df.groupby([X,y])['mean_train_score'].mean().unstack(), 
+                    ax=axes[0], annot=True, fmt='.3f')
+
+        sns.heatmap(df.groupby([X,y])['mean_test_score'].mean().unstack(), 
+                    ax=axes[1], annot=True, fmt='.3f')
+        
+    axes[0].set_title('Mean Train Respe Score')
+    axes[1].set_title('Mean Test Respe Score')
+    
+    
+#----------------print the train and test score-----------------#
+from sklearn.model_selection import train_test_split
+def train_test_score(Model=None, train_size=762906, test_size=254303, X=None, y=None):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=520)
+    print('Calculating train score...')
+    y_train_hat = Model.predict(X_train[:train_size])
+    print('  train rmspe score: ',rmspe(y_train_hat, y_train[:train_size]),'\n')
+    print('Calculating test score...')
+    y_test_hat = Model.predict(X_test[:test_size])
+    print('  test rmspe score: ',rmspe(y_test_hat, y_test[:test_size]),'\n')
+    
+    
+#----------------save model and print the best estimator-----------------#
+import joblib
+def save_model(Model, FileName, Best_Model=True):
+    if Best_Model:
+        print(FileName+'.best_estimator_:')
+        print('  ',Model.best_estimator_,'\n')
+    FileName = 'Model_Parameter/'+FileName+'.pkl'
+    print('The Model have been save in ','[\''+FileName+'\']')
+    joblib.dump(Model, FileName) 
+    print('  PS: To load model, use command: \'Model = joblib.load(FileName)\'.\n')
