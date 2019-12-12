@@ -75,8 +75,6 @@ def drop_columns(data):
     data.drop(['PromoInterval_Nan', 'StoreType_d', 'Assortment_c', 'StateHoliday_0'], axis=1, inplace=True)
     return data
 
-def
-
 from sklearn.preprocessing import StandardScaler
 def scale_data(data):
     scaler = StandardScaler()
