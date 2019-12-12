@@ -158,23 +158,38 @@ def visual_result(model,list_X_y, same_axis=True):
     
 #----------------print the train and test score-----------------#
 from sklearn.model_selection import train_test_split
+import datetime
 def train_test_score(Model=None, train_size=762906, test_size=254303, X=None, y=None):
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=520)
+    
     print('Calculating train score...')
+    starttime = datetime.datetime.now()
     y_train_hat = Model.predict(X_train[:train_size])
-    print('  train rmspe score: ',rmspe(y_train_hat, y_train[:train_size]),'\n')
+    print('  Train rmspe score:',round(rmspe(y_train_hat, y_train[:train_size]),5) )
+    endtime = datetime.datetime.now()
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
     print('Calculating test score...')
+    starttime = datetime.datetime.now()
     y_test_hat = Model.predict(X_test[:test_size])
-    print('  test rmspe score: ',rmspe(y_test_hat, y_test[:test_size]),'\n')
+    print('  Test rmspe score:',round(rmspe(y_test_hat, y_test[:test_size]),5) )
+    endtime = datetime.datetime.now()
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
     
     
 #----------------save model and print the best estimator-----------------#
 import joblib
+import datetime
 def save_model(Model, FileName, Best_Model=True):
-    if Best_Model:
-        print(FileName+'.best_estimator_:')
-        print('  ',Model.best_estimator_,'\n')
+    print('Saving model...')
+    starttime = datetime.datetime.now()
     FileName = 'Model_Parameter/'+FileName+'.pkl'
-    print('The Model have been save in ','[\''+FileName+'\']')
     joblib.dump(Model, FileName) 
-    print('  PS: To load model, use command: \'Model = joblib.load(FileName)\'.\n')
+    endtime = datetime.datetime.now()
+    print('  The Model have been save in ','[\''+FileName+'\']')
+    print('    PS: To load model, use command: \'Model = joblib.load(FileName)\'.')
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    if Best_Model:
+        print(' ',FileName+'.best_estimator_:')
+        print('   ',Model.best_estimator_,'\n')
+
