@@ -76,11 +76,17 @@ def drop_columns(data):
     return data
 
 from sklearn.preprocessing import StandardScaler
-def scale_data(data):
+def scale_data1(data):
     scaler = StandardScaler()
     col = ['Store','Month','Day','Year','DayOfWeek','CompetitionDistance',
              'CompetitionOpenTime','Promo2SinceWeek','Promo2SinceYear']
     data[col] = scaler.fit_transform(data[col])
+    return data, scaler
+
+def scale_data2(data,scaler):
+    col = ['Store','Month','Day','Year','DayOfWeek','CompetitionDistance',
+             'CompetitionOpenTime','Promo2SinceWeek','Promo2SinceYear']
+    data[col] = scaler.transform(data[col])
     return data
     
     
@@ -89,11 +95,11 @@ def train_preprocess(train_data, extend_data):
     train_data = extend(train_data.drop(['Sales','Customers'], axis=1), store_pre, Bow_Matrix.columns)
     train_data = one_hot(train_data)
     train_data = drop_columns(train_data)
-    train_data = scale_data(train_data)
+    train_data,scaler = scale_data1(train_data)
     print('  Successfully preprocess training data.\n')
-    return train_data
+    return train_data,scaler
     
-def test_preprocess(test_data, extend_data):
+def test_preprocess(test_data, extend_data, scaler):
     store_pre, Bow_Matrix = BOW(Data=extend_data)
     test_data = extend(test_data.drop('Id', axis=1), store_pre, Bow_Matrix.columns)
     test_data = one_hot(test_data)
@@ -102,16 +108,18 @@ def test_preprocess(test_data, extend_data):
                                                                    ['StateHoliday_b','StateHoliday_c'], 
                                                                    dtype='uint8')
     test_data = drop_columns(test_data)
-    test_data = scale_data(test_data)
+    test_data = scale_data2(test_data, scaler)
     print('  Successfully preprocess testing data.\n')
     return test_data
 
 def data_preprocess(train_data, test_data, extend_data):
     print('Preprocessing training data...')
-    X1 = train_preprocess(train_data, extend_data)
+    X1,scaler = train_preprocess(train_data, extend_data)
     print('Preprocessing testing data...')
-    X2 = test_preprocess(test_data, extend_data)
+    X2 = test_preprocess(test_data, extend_data, scaler)
     y1 = train_data['Sales']
+#     y1.loc[y1==0] = 10**(-100)
+#     y1.loc[:] = np.log(y1)
     return X1, y1, X2
 
 
@@ -123,6 +131,7 @@ def ToWeight(y):
     return w
  
 def rmspe(yhat, y):
+    y = np.array(y).reshape( (len(y),) )
     w = ToWeight(y)
     rmspe = np.sqrt(np.mean( w * (y - yhat)**2 ))
     return rmspe
@@ -183,7 +192,7 @@ import datetime
 def save_model(Model, FileName, Best_Model=True):
     print('Saving model...')
     starttime = datetime.datetime.now()
-    FileName2 = 'Model_Parameter/'+FileName+'.pkl'
+    FileName2 = 'Model_Parameter2/'+FileName+'.pkl'
     joblib.dump(Model, FileName2) 
     endtime = datetime.datetime.now()
     print('  The Model have been save in ','[\''+FileName2+'\']')
@@ -192,4 +201,34 @@ def save_model(Model, FileName, Best_Model=True):
     if Best_Model:
         print(' ',FileName+'.best_estimator_:')
         print('   ',Model.best_estimator_,'\n')
+
+        
+#----------------predict and save submission-----------------#
+def submission(Model, Save_File=True):
+    starttime = datetime.datetime.now()
+    print('Predicting submission...')
+    submission = pd.read_csv('rossmann-store-sales/sample_submission.csv')
+    X_predict_reduce = pd.read_csv('data/X_predict_reduce.csv', index_col = 0)    
+#     submission['Sales'] = np.exp(Model.predict(X_predict_reduce))
+    submission['Sales'] = Model.predict(X_predict_reduce)
+    endtime = datetime.datetime.now()
+    print('  Done!')
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
+    if Save_File:
+        print('Saving submission...')
+        submission.to_csv('/Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales/submission.csv',
+                      index=False)
+        print('  Done!')
+        print('  PS: To submit file, use command:')
+        print('    cd /Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales')
+        print('    kaggle competitions submit -c rossmann-store-sales -f submission.csv -m "Message"')
+        
+        
+#----------------Voting-----------------#
+def Voting(estimators, data):
+    predict_mean = np.zeros(len(data), dtype=float)
+    for estimator in estimators:
+        predict_mean = predict_mean + estimator.predict(data)
+    return predict_mean/len(estimators)
 
