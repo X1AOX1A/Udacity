@@ -1,0 +1,9 @@
+coding: utf-8
+Python 3.7.3
+numpy 1.17.4
+pandas 0.24.2
+matplotlib 3.1.1
+seaborn 0.9.0
+joblib 0.14.0
+scikit-learn 0.21.3
+xgboost 0.09

@@ -118,8 +118,6 @@ def data_preprocess(train_data, test_data, extend_data):
     print('Preprocessing testing data...')
     X2 = test_preprocess(test_data, extend_data, scaler)
     y1 = train_data['Sales']
-#     y1.loc[y1==0] = 10**(-100)
-#     y1.loc[:] = np.log(y1)
     return X1, y1, X2
 
 
@@ -131,6 +129,14 @@ def ToWeight(y):
     return w
  
 def rmspe(yhat, y):
+    y = np.array(y).reshape( (len(y),) )
+    w = ToWeight(y)
+    rmspe = np.sqrt(np.mean( w * (y - yhat)**2 ))
+    return rmspe
+
+def rmspe_log(yhat, y):
+    yhat = np.expm1(yhat)
+    y = np.expm1(y)
     y = np.array(y).reshape( (len(y),) )
     w = ToWeight(y)
     rmspe = np.sqrt(np.mean( w * (y - yhat)**2 ))
@@ -185,6 +191,23 @@ def train_test_score(Model=None, train_size=762906, test_size=254303, X=None, y=
     endtime = datetime.datetime.now()
     print('  Using time:', (endtime - starttime).seconds, 'sec\n')
     
+def train_test_score_log(Model=None, train_size=762906, test_size=254303, X=None, y=None):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=520)
+    
+    print('Calculating train score...')
+    starttime = datetime.datetime.now()
+    y_train_hat = Model.predict(X_train[:train_size])
+    print('  Train rmspe score:',round(rmspe_log(y_train_hat, y_train[:train_size]),5) )
+    endtime = datetime.datetime.now()
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
+    print('Calculating test score...')
+    starttime = datetime.datetime.now()
+    y_test_hat = Model.predict(X_test[:test_size])
+    print('  Test rmspe score:',round(rmspe_log(y_test_hat, y_test[:test_size]),5) )
+    endtime = datetime.datetime.now()
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
     
 #----------------save model and print the best estimator-----------------#
 import joblib
@@ -224,6 +247,66 @@ def submission(Model, Save_File=True):
         print('    cd /Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales')
         print('    kaggle competitions submit -c rossmann-store-sales -f submission.csv -m "Message"')
         
+def submission_log(Model, Save_File=True):
+    starttime = datetime.datetime.now()
+    print('Predicting submission...')
+    submission = pd.read_csv('rossmann-store-sales/sample_submission.csv')
+    X_predict_reduce = pd.read_csv('data/X_predict_reduce.csv', index_col = 0)    
+    submission['Sales'] = np.expm1(Model.predict(X_predict_reduce))
+    endtime = datetime.datetime.now()
+    print('  Done!')
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
+    if Save_File:
+        print('Saving submission...')
+        submission.to_csv('/Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales/submission.csv',
+                      index=False)
+        print('  Done!')
+        print('  PS: To submit file, use command:')
+        print('    cd /Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales')
+        print('    kaggle competitions submit -c rossmann-store-sales -f submission.csv -m "Message"')
+        
+def submission_log2(Model, Save_File=True):
+    starttime = datetime.datetime.now()
+    print('Predicting submission...')
+    submission = pd.read_csv('rossmann-store-sales/sample_submission.csv')
+    X_predict_reduce = pd.read_csv('data/X_predict_process.csv', index_col = 0)    
+    submission['Sales'] = np.expm1(Model.predict(X_predict_reduce))
+    endtime = datetime.datetime.now()
+    print('  Done!')
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
+    if Save_File:
+        print('Saving submission...')
+        submission.to_csv('/Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales/submission.csv',
+                      index=False)
+        print('  Done!')
+        print('  PS: To submit file, use command:')
+        print('    cd /Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales')
+        print('    kaggle competitions submit -c rossmann-store-sales -f submission.csv -m "Message"')
+        
+def submission_log_adjust(Model, Weight, Save_File=True):
+    starttime = datetime.datetime.now()
+    print('Predicting submission...')
+    submission = pd.read_csv('rossmann-store-sales/sample_submission.csv')
+    X_predict_reduce = pd.read_csv('data/X_predict_reduce.csv', index_col = 0) 
+    df_submission = pd.read_csv('data/X_predict_process.csv', index_col = 0) 
+
+    df_submission = pd.merge(df_submission, Weight, on='Store')
+    submission['Sales'] = np.expm1(Model.predict(X_predict_reduce)) * df_submission['Adjust_Weight']
+    
+    endtime = datetime.datetime.now()
+    print('  Done!')
+    print('  Using time:', (endtime - starttime).seconds, 'sec\n')
+    
+    if Save_File:
+        print('Saving submission...')
+        submission.to_csv('/Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales/submission.csv',
+                      index=False)
+        print('  Done!')
+        print('  PS: To submit file, use command:')
+        print('    cd /Users/apple/Documents/Jupyter/Udacity/Rossmann_Store_Sales')
+        print('    kaggle competitions submit -c rossmann-store-sales -f submission.csv -m "Message"')
         
 #----------------Voting-----------------#
 def Voting(estimators, data):
